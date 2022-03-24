@@ -4,8 +4,10 @@ import com.ex.junit5lecture.domain.Member;
 import com.ex.junit5lecture.exception.InvalidMemberException;
 import com.ex.junit5lecture.exception.MemberNotFoundException;
 
+import java.util.Optional;
+
 public interface MemberService {
 
-    Member findById(Long memberId) throws MemberNotFoundException;
+    Optional<Member> findById(Long memberId);
     void validate(Long memberId) throws InvalidMemberException;
 }

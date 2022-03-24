@@ -2,6 +2,7 @@ package com.ex.junit5lecture.service;
 
 import com.ex.junit5lecture.domain.Member;
 import com.ex.junit5lecture.domain.Study;
+import com.ex.junit5lecture.exception.MemberNotFoundException;
 import com.ex.junit5lecture.repository.StudyRepository;
 
 public class StudyService {
@@ -19,10 +20,9 @@ public class StudyService {
 
     public Study createStudy(Long memberId, Study study) {
 
-        Member member = memberService.findById(memberId);
-        if(member == null ){
-            throw new IllegalArgumentException("member does not exists. id=" + memberId);
-        }
+        Member member = memberService.findById(memberId).orElseThrow(
+                () -> new MemberNotFoundException("member does not exists. id=" + memberId)
+        );
 
         study.setOwner(member);
         return studyRepository.save(study);
