@@ -1,16 +1,14 @@
 package com.ex.junit5lecture.dummy;
 
-import java.util.concurrent.ThreadLocalRandom;
-
-public class Member {
+public class User {
 
     private String name;
     private int age;
 
-    public Member() {
+    public User() {
     }
 
-    public Member(String name, int age) {
+    public User(String name, int age) {
         this.name = name;
         this.age = age;
     }
