@@ -28,4 +28,11 @@ public class StudyService {
         memberService.notify(study);
         return studyRepository.save(study);
     }
+
+    public Study publishStudy(Study study) {
+        study.publish();
+        Study savedStudy = studyRepository.save(study);
+        memberService.notify(savedStudy);
+        return savedStudy;
+    }
 }

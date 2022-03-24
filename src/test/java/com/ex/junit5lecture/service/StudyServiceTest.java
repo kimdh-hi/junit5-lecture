@@ -2,8 +2,10 @@ package com.ex.junit5lecture.service;
 
 import com.ex.junit5lecture.domain.Member;
 import com.ex.junit5lecture.domain.Study;
+import com.ex.junit5lecture.domain.StudyStatus;
 import com.ex.junit5lecture.exception.InvalidMemberException;
 import com.ex.junit5lecture.repository.StudyRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -13,14 +15,26 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class StudyServiceTest {
 
     @Mock StudyRepository studyRepository; // 에노테이션을 처리할 extension 필요
-
     @Mock MemberService memberService;
+
+    Member member;
+    Study study;
+
+    @BeforeEach
+    void initData() {
+        member = new Member();
+        member.setEmail("kim@gmail.com");
+        member.setId(1L);
+        study = new Study("study", 10);
+    }
 
     @Test
     void createStudyServiceObjectTest() {
@@ -34,11 +48,6 @@ class StudyServiceTest {
 
     @Test
     void stubbingTest() {
-        Member member = new Member();
-        member.setEmail("kim@gmail.com");
-        member.setId(1L);
-        Study study = new Study("study", 10);
-
 //        when(memberService.findById(1L)).thenReturn(Optional.of(member));
         when(memberService.findById(anyLong())).thenReturn(Optional.of(member)); // stubbing
 
@@ -49,11 +58,6 @@ class StudyServiceTest {
 
     @Test
     void createStudyTest() {
-        Member member = new Member();
-        member.setId(1L);
-        member.setEmail("kim@gmail.com");
-        Study study = new Study("test", 10);
-
         when(memberService.findById(anyLong())).thenReturn(Optional.of(member)); // stubbing
         when(studyRepository.save(study)).thenReturn(study); // stubbing
 
@@ -66,11 +70,6 @@ class StudyServiceTest {
 
     @Test
     void notifyCallTest() throws InvalidMemberException {
-        Member member = new Member();
-        member.setId(1L);
-        member.setEmail("kim@gmail.com");
-        Study study = new Study("test", 10);
-
         when(memberService.findById(anyLong())).thenReturn(Optional.of(member)); // stubbing
         when(studyRepository.save(study)).thenReturn(study); // stubbing
 
@@ -85,5 +84,32 @@ class StudyServiceTest {
 
         assertNotNull(study.getOwner());
         assertEquals(member, study.getOwner());
+    }
+
+    @Test
+    void createStudyTestBddStyle() {
+        // given
+        given(memberService.findById(anyLong())).willReturn(Optional.of(member));
+        given(studyRepository.save(any(Study.class))).willReturn(study);
+        // when
+        StudyService studyService = new StudyService(memberService, studyRepository);
+        studyService.createStudy(member.getId(), study);
+        // then
+        then(memberService).should(times(1)).notify(any(Study.class));
+        assertNotNull(study.getOwner());
+        assertEquals(member, study.getOwner());
+    }
+
+    @Test
+    void publishStudyTest() {
+        // given
+        given(studyRepository.save(any(Study.class))).willReturn(study);
+        // when
+        StudyService studyService = new StudyService(memberService, studyRepository);
+        Study publishedStudy = studyService.publishStudy(this.study);
+        //then
+        then(memberService).should().notify(publishedStudy);
+        assertNotNull(publishedStudy);
+        assertEquals(StudyStatus.OPENED, publishedStudy.getStatus());
     }
 }
