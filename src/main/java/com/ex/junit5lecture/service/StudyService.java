@@ -25,6 +25,7 @@ public class StudyService {
         );
 
         study.setOwner(member);
+        memberService.notify(study);
         return studyRepository.save(study);
     }
 }

@@ -2,6 +2,7 @@ package com.ex.junit5lecture.service;
 
 import com.ex.junit5lecture.domain.Member;
 import com.ex.junit5lecture.domain.Study;
+import com.ex.junit5lecture.exception.InvalidMemberException;
 import com.ex.junit5lecture.repository.StudyRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,7 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,6 +59,29 @@ class StudyServiceTest {
 
         StudyService studyService = new StudyService(memberService, studyRepository);
         studyService.createStudy(1L, study);
+
+        assertNotNull(study.getOwner());
+        assertEquals(member, study.getOwner());
+    }
+
+    @Test
+    void notifyCallTest() throws InvalidMemberException {
+        Member member = new Member();
+        member.setId(1L);
+        member.setEmail("kim@gmail.com");
+        Study study = new Study("test", 10);
+
+        when(memberService.findById(anyLong())).thenReturn(Optional.of(member)); // stubbing
+        when(studyRepository.save(study)).thenReturn(study); // stubbing
+
+        StudyService studyService = new StudyService(memberService, studyRepository);
+        studyService.createStudy(1L, study);
+
+
+        // mocking 된 memberService 의 notify 메서드가 한 번 호출되는지 확인 times(1)
+        verify(memberService, times(1)).notify(any());
+        // validate 메서드가 호출되지 않았는지 확인 never()
+        verify(memberService, never()).validate(anyLong());
 
         assertNotNull(study.getOwner());
         assertEquals(member, study.getOwner());
